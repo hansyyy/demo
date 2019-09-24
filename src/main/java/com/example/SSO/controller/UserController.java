@@ -52,7 +52,10 @@ public class UserController {
 
                 //用完关闭
                 jedis.close();
-                return ResultUtil.success(token);
+                Map map = new HashMap<>();
+                map.put("token",token);
+                map.put("user",user);
+                return ResultUtil.success(map);
             }else {
                 return ResultUtil.error();
             }
