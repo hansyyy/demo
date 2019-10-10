@@ -34,9 +34,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Boolean addUser(String userName, String password) {
-        Boolean result = userDao.addUser(userName, password);
-        return result;
+    public Boolean addUser(String userName, String password, String studentId) {
+        if (userDao.selectUserByUserName(userName)!=null){
+            return false;
+        }else {
+            Boolean result = userDao.addUser(userName, password, studentId);
+            return result;
+        }
     }
 
     @Override

@@ -16,7 +16,11 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.awt.image.BufferedImage;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,64 +44,69 @@ public class UserController {
             String verifyCode = (String)request.getSession().getAttribute("verifyCode");
             if (verifyCode.equals(userDto.getVerifyCode())){
                 User user = userService.login(userDto);
-                Jedis jedis = new Jedis("127.0.0.1", 6379);
-                String token = TokenUtil.generateToken(userDto.getUserName(), userDto.getPassword());
-                jedis.set(userDto.getUserName(), token);
-                //设置key生存时间，当key过期时，它会被自动删除，时间是秒
-                jedis.expire(userDto.getUserName(), ConstantKit.TOKEN_EXPIRE_TIME);
-                jedis.set(token, userDto.getUserName());
-                jedis.expire(token, ConstantKit.TOKEN_EXPIRE_TIME);
-                Long currentTime = System.currentTimeMillis();
-                jedis.set(token + userDto.getUserName(), currentTime.toString());
-
-                //用完关闭
-                jedis.close();
-                Map map = new HashMap<>();
-                map.put("token",token);
-                map.put("user",user);
-                return ResultUtil.success(map);
+                if (user!=null){
+                    Jedis jedis = new Jedis("127.0.0.1", 6379);
+                    //生成token
+                    String token = TokenUtil.generateToken(userDto.getUserName(), userDto.getPassword());
+                    jedis.set(userDto.getUserName(), token);
+                    //设置key生存时间，当key过期时，它会被自动删除，时间是秒
+                    jedis.expire(userDto.getUserName(), ConstantKit.TOKEN_EXPIRE_TIME);
+                    jedis.set(token, userDto.getUserName());
+                    jedis.expire(token, ConstantKit.TOKEN_EXPIRE_TIME);
+                    Long currentTime = System.currentTimeMillis();
+                    jedis.set(token + userDto.getUserName(), currentTime.toString());
+                    //用完关闭
+                    jedis.close();
+                    return ResultUtil.success("用户"+user.getUserName()+"已登陆!"+"token是"+token);
+                }else {
+                    return ResultUtil.notExist("用户不存在");
+                }
             }else {
-                return ResultUtil.error();
+                return ResultUtil.error("验证码错误");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResultUtil.error();
+            return ResultUtil.error("登陆失败");
         }
     }
 
     @PostMapping("addUser")
     @ApiOperation("注册")
-    public Result addUser(String userName, String password){
+    public Result addUser(String userName, String password, String studentId){
         try {
-            if (userName==null||password==null||userService.selectUserByUserName(userName)==null){
-                return ResultUtil.isNull();
+            if (userName==null||password==null){
+                return ResultUtil.isNull("用户名或密码为空");
             }else {
-                Boolean result = userService.addUser(userName, password);
+                Boolean result = userService.addUser(userName, password,studentId);
                 if (result){
-                    return ResultUtil.success();
-                }else {
-                    return ResultUtil.error();
+                    return ResultUtil.success("用户"+userName+"已注册");
+                    }else {
+                    return ResultUtil.error("注册失败");
+                    }
                 }
-            }
         }catch (Exception e){
             e.printStackTrace();
-            return ResultUtil.error();
+            return ResultUtil.error("注册失败");
         }
     }
 
     @PostMapping("createVerifyCode")
     @ApiOperation("生成验证码")
-    public Result verifycode(HttpServletRequest request){
+    public void verifycode(HttpServletRequest request, HttpServletResponse response){
         try {
             Object[] objects = VerifyUtil.createImage();
             request.getSession().setAttribute("verifyCode",objects[0]);
             Map map = new HashMap<>();
             map.put("base64","data:image/png;base64,"+ VerifyUtil.getbase64(objects[1]));
             map.put("verifycode",objects[0]);
-            return ResultUtil.success(map);
+            BufferedImage image = (BufferedImage) objects[1];
+            response.setContentType("image/png");
+            OutputStream os = response.getOutputStream();
+            ImageIO.write(image, "png", os);
+            System.out.println(map);
+            os.close();
         }catch (Exception e){
             e.printStackTrace();
-            return ResultUtil.error();
         }
     }
 
@@ -108,5 +117,6 @@ public class UserController {
         return ResultUtil.success();
     }
 
-
 }
+
+

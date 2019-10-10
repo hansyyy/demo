@@ -20,17 +20,19 @@ public class ResultUtil {
         return success(null);
     }
 
-    public static Result error() {
+    public static Result error(Object object) {
         Result result = new Result();
         result.setStatus(ResultEnum.ERROR.getStatus());
         result.setMsg(ResultEnum.ERROR.getMsg());
+        result.setData(object);
         return result;
     }
 
-    public static Result isNull() {
+    public static Result isNull(Object object) {
         Result result = new Result();
         result.setStatus(ResultEnum.ISNULL.getStatus());
         result.setMsg(ResultEnum.ISNULL.getMsg());
+        result.setData(object);
         return result;
     }
 
@@ -41,10 +43,11 @@ public class ResultUtil {
         return result;
     }
 
-    public static Result notExist() {
+    public static Result notExist(Object object) {
         Result result = new Result();
         result.setStatus(ResultEnum.NOTEXIST.getStatus());
         result.setMsg(ResultEnum.NOTEXIST.getMsg());
+        result.setData(object);
         return result;
     }
 }

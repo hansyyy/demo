@@ -15,8 +15,8 @@
     </select>
 
     <insert id="addUser" >
-        INSERT INTO user(userName, password)
-        VALUES (#{userName},#{password})
+        INSERT INTO user(userName, password, studentId)
+        VALUES (#{userName},#{password},#{studentId})
     </insert>
 
     <select id="selectUserByUserName" resultMap="User" resultType="com.example.SSO.domain.entity.User">

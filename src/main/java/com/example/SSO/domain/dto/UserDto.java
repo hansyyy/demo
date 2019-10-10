@@ -13,9 +13,9 @@ import lombok.ToString;
 @Data
 @ToString
 public class UserDto {
-    @ApiModelProperty(name = "userName", value = "管理员名字", dataType = "string")
+    @ApiModelProperty(name = "userName", value = "用户名", dataType = "string")
     private String userName;
-    @ApiModelProperty(name = "password", value = "管理员密码", dataType = "string")
+    @ApiModelProperty(name = "password", value = "密码", dataType = "string")
     private String password;
     @ApiModelProperty(name = "verifyCode", value = "验证码", dataType = "string")
     private String verifyCode;

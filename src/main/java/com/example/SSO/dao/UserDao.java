@@ -24,7 +24,7 @@ public interface UserDao {
      * @param password 密码
      * @return
      */
-    Boolean addUser(@Param("userName") String userName, @Param("password") String password);
+    Boolean addUser(@Param("userName") String userName, @Param("password") String password ,@Param("studentId") String studentId);
 
     /**
      * 根据用户名查询用户

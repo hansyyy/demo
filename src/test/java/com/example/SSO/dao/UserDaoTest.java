@@ -31,7 +31,7 @@ public class UserDaoTest {
     @Transactional
     @Test
     public void addUser() {
-        Boolean result = userDao.addUser("sl","234567");
+        Boolean result = userDao.addUser("sl","234567","567890");
         Assert.assertTrue(result);
     }
 

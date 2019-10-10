@@ -37,7 +37,7 @@ public class UserServiceTest {
     @Transactional
     @Test
     public void addUser() {
-        Boolean result = userService.addUser("sl","234567");
+        Boolean result = userService.addUser("sl","234567","4567890");
         Assert.assertTrue(result);
     }
 

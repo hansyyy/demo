@@ -36,11 +36,11 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
         // 如果打上了AuthToken注解则需要验证token
         if (method.getAnnotation(AuthToken.class) != null || handlerMethod.getBeanType().getAnnotation(AuthToken.class) != null) {
-
             String token = request.getParameter(httpHeaderName);
             String username = "";
             Jedis jedis = new Jedis("127.0.0.1", 6379);
             if (token != null && token.length() != 0) {
+                //通过token查询用户名
                 username = jedis.get(token);
             }
             if (username != null && !("").equals(username.trim())) {
@@ -60,7 +60,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
                 return true;
             } else {
                 try {
-                    System.out.println(ResultUtil.error());
+                    System.out.println(ResultUtil.error("拦截失败"));
                     return false;
                 } catch (Exception e) {
                     e.printStackTrace();
