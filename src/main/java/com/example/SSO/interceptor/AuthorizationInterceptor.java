@@ -36,12 +36,17 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
         // 如果打上了AuthToken注解则需要验证token
         if (method.getAnnotation(AuthToken.class) != null || handlerMethod.getBeanType().getAnnotation(AuthToken.class) != null) {
-            String token = request.getParameter(httpHeaderName);
+
+            String token = (String) request.getSession().getAttribute("token");
+            System.out.println(token);
             String username = "";
             Jedis jedis = new Jedis("127.0.0.1", 6379);
             if (token != null && token.length() != 0) {
                 //通过token查询用户名
                 username = jedis.get(token);
+            }else {
+                System.out.println("token为空！");
+                return false;
             }
             if (username != null && !("").equals(username.trim())) {
                 Long tokeBirthTime = Long.valueOf(jedis.get(token + username));

@@ -20,6 +20,7 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,6 +49,7 @@ public class UserController {
                     Jedis jedis = new Jedis("127.0.0.1", 6379);
                     //生成token
                     String token = TokenUtil.generateToken(userDto.getUserName(), userDto.getPassword());
+                    request.getSession().setAttribute("token",token);
                     jedis.set(userDto.getUserName(), token);
                     //设置key生存时间，当key过期时，它会被自动删除，时间是秒
                     jedis.expire(userDto.getUserName(), ConstantKit.TOKEN_EXPIRE_TIME);
@@ -57,7 +59,7 @@ public class UserController {
                     jedis.set(token + userDto.getUserName(), currentTime.toString());
                     //用完关闭
                     jedis.close();
-                    return ResultUtil.success("用户"+user.getUserName()+"已登陆!"+"token是"+token);
+                    return ResultUtil.success("用户："+user.getUserName()+"已登陆！"+"token:"+token);
                 }else {
                     return ResultUtil.notExist("用户不存在");
                 }
@@ -115,6 +117,14 @@ public class UserController {
     @AuthToken
     public Result test(){
         return ResultUtil.success();
+    }
+
+    @GetMapping("loginout")
+    @ApiOperation("登出")
+    public Result loginout(HttpServletResponse response,HttpServletRequest request) throws IOException {
+        request.getSession().setAttribute("token",null);
+        response.sendRedirect("");
+        return ResultUtil.success("用户已登出");
     }
 
 }
