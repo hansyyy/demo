@@ -50,6 +50,7 @@ public class UserController {
                     //生成token
                     String token = TokenUtil.generateToken(userDto.getUserName(), userDto.getPassword());
                     request.getSession().setAttribute("token",token);
+                    request.getSession().setAttribute("userName",user.getUserName());
                     jedis.set(userDto.getUserName(), token);
                     //设置key生存时间，当key过期时，它会被自动删除，时间是秒
                     jedis.expire(userDto.getUserName(), ConstantKit.TOKEN_EXPIRE_TIME);
@@ -125,6 +126,23 @@ public class UserController {
         request.getSession().setAttribute("token",null);
         response.sendRedirect("");
         return ResultUtil.success("用户已登出");
+    }
+
+    @PostMapping("sendMail")
+    @ApiOperation("发送邮件")
+    @AuthToken
+    public Result sendMail(HttpServletRequest request, String subject, String context){
+        try {
+            String to = (String)request.getSession().getAttribute("userName");
+            if (userService.sendMail(to, subject, context)){
+                return ResultUtil.success("邮件已发送！");
+            }else{
+                return ResultUtil.error("邮件发送失败");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResultUtil.error("错误！");
+        }
     }
 
 }

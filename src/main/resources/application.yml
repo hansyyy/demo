@@ -24,3 +24,9 @@ mybatis:
   configuration:
     cache-enabled: true
     call-setters-on-nulls: true
+
+mail:
+  host: smpt.qq.com
+  username: 975444913@qq.com
+  password: callmehansiyue11
+  default-encoding: UTF-8

@@ -32,4 +32,6 @@ public interface UserService {
      * @return
      */
     User selectUserByUserName(@Param("userName") String userName);
+
+    Boolean sendMail(String to, String subject, String context);
 }
