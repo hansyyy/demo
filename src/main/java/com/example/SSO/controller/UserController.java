@@ -10,6 +10,7 @@ import com.example.SSO.util.ResultUtil;
 import com.example.SSO.util.TokenUtil;
 import com.example.SSO.util.VerifyUtil;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
@@ -75,12 +76,12 @@ public class UserController {
 
     @PostMapping("addUser")
     @ApiOperation("注册")
-    public Result addUser(String userName, String password, String studentId){
+    public Result addUser(String userName, String password, String studentId, String mail, String major){
         try {
             if (userName==null||password==null){
                 return ResultUtil.isNull("用户名或密码为空");
             }else {
-                Boolean result = userService.addUser(userName, password,studentId);
+                Boolean result = userService.addUser(userName, password,studentId,mail,major);
                 if (result){
                     return ResultUtil.success("用户"+userName+"已注册");
                     }else {
@@ -122,9 +123,10 @@ public class UserController {
 
     @GetMapping("loginout")
     @ApiOperation("登出")
+    @AuthToken
     public Result loginout(HttpServletResponse response,HttpServletRequest request) throws IOException {
         request.getSession().setAttribute("token",null);
-        response.sendRedirect("");
+        //response.sendRedirect("");
         return ResultUtil.success("用户已登出");
     }
 
@@ -133,7 +135,9 @@ public class UserController {
     @AuthToken
     public Result sendMail(HttpServletRequest request, String subject, String context){
         try {
-            String to = (String)request.getSession().getAttribute("userName");
+            String userName = (String)request.getSession().getAttribute("userName");
+            User user = userService.selectUserByUserName(userName);
+            String to=user.getMail();
             if (userService.sendMail(to, subject, context)){
                 return ResultUtil.success("邮件已发送！");
             }else{

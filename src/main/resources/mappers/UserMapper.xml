@@ -6,17 +6,22 @@
         <result property="id" column="id" jdbcType="INTEGER"/>
         <result property="userName" column="userName" jdbcType="VARCHAR"/>
         <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="mail" column="mail" jdbcType="VARCHAR"/>
+        <result property="major" column="major" jdbcType="VARCHAR"/>
+        <result property="head" column="head" jdbcType="VARCHAR"/>
+        <result property="studentId" column="studentId" jdbcType="INTEGER"/>
     </resultMap>
 
+
     <select id="login" resultMap="User" resultType="com.example.SSO.domain.entity.User">
-        SELECT *
+        SELECT userName,password
         FROM user
         WHERE userName = #{userName} AND password = #{password}
     </select>
 
     <insert id="addUser" >
-        INSERT INTO user(userName, password, studentId)
-        VALUES (#{userName},#{password},#{studentId})
+        INSERT INTO user(userName, password, studentId, major, mail)
+        VALUES (#{userName},#{password},#{studentId},#{major},#{mail})
     </insert>
 
     <select id="selectUserByUserName" resultMap="User" resultType="com.example.SSO.domain.entity.User">

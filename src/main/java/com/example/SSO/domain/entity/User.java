@@ -13,4 +13,8 @@ public class User {
     private Integer studentId;
     private String userName;
     private String password;
+    private String mail;
+    private String major;
+    private String head;
+
 }
