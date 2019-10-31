@@ -49,19 +49,19 @@ public class UserController {
                 if (user!=null){
                     Jedis jedis = new Jedis("127.0.0.1", 6379);
                     //生成token
-                    String token = TokenUtil.generateToken(userDto.getUserName(), userDto.getPassword());
+                    String token = TokenUtil.generateToken(userDto.getStudentId().toString(), userDto.getPassword());
                     request.getSession().setAttribute("token",token);
-                    request.getSession().setAttribute("userName",user.getUserName());
-                    jedis.set(userDto.getUserName(), token);
+                    request.getSession().setAttribute("studentId",user.getStudentId());
+                    jedis.set(userDto.getStudentId().toString(), token);
                     //设置key生存时间，当key过期时，它会被自动删除，时间是秒
-                    jedis.expire(userDto.getUserName(), ConstantKit.TOKEN_EXPIRE_TIME);
-                    jedis.set(token, userDto.getUserName());
+                    jedis.expire(userDto.getStudentId().toString(), ConstantKit.TOKEN_EXPIRE_TIME);
+                    jedis.set(token, userDto.getStudentId().toString());
                     jedis.expire(token, ConstantKit.TOKEN_EXPIRE_TIME);
                     Long currentTime = System.currentTimeMillis();
-                    jedis.set(token + userDto.getUserName(), currentTime.toString());
+                    jedis.set(token + userDto.getStudentId(), currentTime.toString());
                     //用完关闭
                     jedis.close();
-                    return ResultUtil.success("用户："+user.getUserName()+"已登陆！"+"token:"+token);
+                    return ResultUtil.success(user.getUserName());
                 }else {
                     return ResultUtil.notExist("用户不存在");
                 }
@@ -76,12 +76,14 @@ public class UserController {
 
     @PostMapping("addUser")
     @ApiOperation("注册")
-    public Result addUser(String userName, String password, String studentId, String mail, String major){
+    public Result addUser(String userName, String password, Integer studentId, String mail, String major){
         try {
             if (userName==null||password==null){
                 return ResultUtil.isNull("用户名或密码为空");
             }else {
                 Boolean result = userService.addUser(userName, password,studentId,mail,major);
+                User user = userService.selectUserByStudentId(studentId);
+                user.setIdentifier(3);
                 if (result){
                     return ResultUtil.success("用户"+userName+"已注册");
                     }else {
@@ -100,21 +102,18 @@ public class UserController {
         try {
             Object[] objects = VerifyUtil.createImage();
             request.getSession().setAttribute("verifyCode",objects[0]);
-            Map map = new HashMap<>();
-            map.put("base64","data:image/png;base64,"+ VerifyUtil.getbase64(objects[1]));
-            map.put("verifycode",objects[0]);
             BufferedImage image = (BufferedImage) objects[1];
             response.setContentType("image/png");
             OutputStream os = response.getOutputStream();
             ImageIO.write(image, "png", os);
-            System.out.println(map);
+            System.out.println(objects[0]);
             os.close();
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    @GetMapping("test")
+    @RequestMapping(value = "test", method = RequestMethod.GET)
     @ApiOperation("test")
     @AuthToken
     public Result test(){
@@ -133,13 +132,14 @@ public class UserController {
     @PostMapping("sendMail")
     @ApiOperation("发送邮件")
     @AuthToken
-    public Result sendMail(HttpServletRequest request, String subject, String context){
+    public Result sendMail(HttpServletRequest request, String subject){
         try {
-            String userName = (String)request.getSession().getAttribute("userName");
-            User user = userService.selectUserByUserName(userName);
-            String to=user.getMail();
-            if (userService.sendMail(to, subject, context)){
-                return ResultUtil.success("邮件已发送！");
+            Integer studentId = (Integer)request.getSession().getAttribute("studentId");
+            User user = userService.selectUserByStudentId(studentId);
+            Object[] objects = VerifyUtil.createImage();
+            request.getSession().setAttribute("mailVerifyCode",objects[0]);
+            if (userService.sendMail(user.getMail(), subject, "验证码为"+objects[0])){
+                return ResultUtil.success(objects[0].toString());//返回邮箱验证码
             }else{
                 return ResultUtil.error("邮件发送失败");
             }

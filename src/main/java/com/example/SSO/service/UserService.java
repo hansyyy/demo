@@ -27,14 +27,15 @@ public interface UserService {
      * @param major 专业
      * @return
      */
-    Boolean addUser(@Param("userName") String userName, @Param("password") String password ,@Param("studentId") String studentId, @Param("mail") String mail, @Param("major") String major);
+    Boolean addUser(@Param("userName") String userName, @Param("password") String password ,@Param("studentId") Integer studentId, @Param("mail") String mail, @Param("major") String major);
 
     /**
      * 根据用户名查询用户
-     * @param userName 用户名
+     * @param studentId 学号
      * @return
      */
-    User selectUserByUserName(@Param("userName") String userName);
+    User selectUserByStudentId(@Param("studentId") Integer studentId);
+
 
     Boolean sendMail(String to, String subject, String context);
 

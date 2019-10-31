@@ -24,20 +24,20 @@ public class UserDaoTest {
 
     @Test
     public void login() {
-        User user = userDao.login("hsy","123456");
+        User user = userDao.login(2018210868,"123456");
         Assert.assertNotNull(user);
     }
 
     @Transactional
     @Test
     public void addUser() {
-        Boolean result = userDao.addUser("sl","234567","567890","67890","hieuhd");
+        Boolean result = userDao.addUser("sl","234567",567890,"67890","hieuhd");
         Assert.assertTrue(result);
     }
 
     @Test
-    public void selectUserByUserName() {
-        User user = userDao.selectUserByUserName("hsy");
+    public void selectUserByStudentId() {
+        User user = userDao.selectUserByStudentId(2018210868);
         Assert.assertNotNull(user);
     }
 }

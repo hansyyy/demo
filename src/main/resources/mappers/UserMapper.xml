@@ -14,9 +14,9 @@
 
 
     <select id="login" resultMap="User" resultType="com.example.SSO.domain.entity.User">
-        SELECT userName,password
+        SELECT studentId,password
         FROM user
-        WHERE userName = #{userName} AND password = #{password}
+        WHERE studentId = #{studentId} AND password = #{password}
     </select>
 
     <insert id="addUser" >
@@ -24,10 +24,10 @@
         VALUES (#{userName},#{password},#{studentId},#{major},#{mail})
     </insert>
 
-    <select id="selectUserByUserName" resultMap="User" resultType="com.example.SSO.domain.entity.User">
-        select userName
+    <select id="selectUserByStudentId" resultMap="User" resultType="com.example.SSO.domain.entity.User">
+        select *
         from user
-        where userName = #{userName}
+        where studentId = #{studentId}
     </select>
 
 </mapper>

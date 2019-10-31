@@ -13,8 +13,8 @@ import lombok.ToString;
 @Data
 @ToString
 public class UserDto {
-    @ApiModelProperty(name = "userName", value = "用户名", dataType = "string")
-    private String userName;
+    @ApiModelProperty(name = "studentId", value = "学号", dataType = "integer")
+    private Integer studentId;
     @ApiModelProperty(name = "password", value = "密码", dataType = "string")
     private String password;
     @ApiModelProperty(name = "verifyCode", value = "验证码", dataType = "string")

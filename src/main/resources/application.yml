@@ -19,14 +19,21 @@ spring:
   session:
     store-type: redis
 
+  mail:
+    host: smtp.qq.com
+    username: 975444913@qq.com
+    password: jgvyryxgryysbegf
+    default-encoding: UTF-8
+    port: 587
+    properties:
+      mail:
+        smtp:
+          socketFactory.class: javax.net.ssl.SSLSocketFactory
+        debug: true
+
 mybatis:
   mapper-locations: classpath*:mappers/*.xml
   configuration:
     cache-enabled: true
     call-setters-on-nulls: true
 
-mail:
-  host: smpt.qq.com
-  username: 975444913@qq.com
-  password: callmehansiyue11
-  default-encoding: UTF-8

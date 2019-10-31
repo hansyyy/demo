@@ -5,6 +5,7 @@ import com.example.SSO.domain.dto.UserDto;
 import com.example.SSO.domain.entity.User;
 import com.example.SSO.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,8 @@ import javax.annotation.Resource;
 @Service
 public class UserServiceImpl implements UserService {
 
+    @Value("${spring.mail.username}")
+    private String from;
     @Resource
     private UserDao userDao;
     @Autowired
@@ -26,11 +29,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User login(UserDto userDto) {
-        if (userDto.getUserName() == null || userDto.getPassword() == null || userDto
+        if (userDto.getStudentId() == null || userDto.getPassword() == null || userDto
                 .getVerifyCode() == null){
             return null;
         }else {
-            User user = userDao.login(userDto.getUserName(),userDto.getPassword());
+            User user = userDao.login(userDto.getStudentId(),userDto.getPassword());
             if (user != null) {
                 return user;
             }else{
@@ -40,8 +43,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Boolean addUser(String userName, String password, String studentId, String mail, String major) {
-        if (userDao.selectUserByUserName(userName)!=null){
+    public Boolean addUser(String userName, String password, Integer studentId, String mail, String major) {
+        if (userDao.selectUserByStudentId(studentId)!=null){
             return false;
         }else {
             Boolean result = userDao.addUser(userName, password, studentId,mail,major);
@@ -50,8 +53,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User selectUserByUserName(String userName) {
-        User user = userDao.selectUserByUserName(userName);
+    public User selectUserByStudentId(Integer studentId) {
+        User user = userDao.selectUserByStudentId(studentId);
         if (user!=null){
             return user;
         }else {
@@ -66,7 +69,7 @@ public class UserServiceImpl implements UserService {
             simpleMailMessage.setTo(to);
             simpleMailMessage.setSubject(subject);
             simpleMailMessage.setText(context);
-            simpleMailMessage.setFrom("975444913@qq.com");
+            simpleMailMessage.setFrom(from);
             javaMailSender.send(simpleMailMessage);
             return true;
         }catch (Exception e){

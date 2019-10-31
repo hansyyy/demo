@@ -12,11 +12,11 @@ import org.springframework.stereotype.Repository;
 public interface UserDao {
     /**
      * 登陆
-     * @param userName 用户名
+     * @param studentId 学号
      * @param password 密码
      * @return
      */
-    User login(@Param("userName") String userName, @Param("password") String password);
+    User login(@Param("studentId") Integer studentId, @Param("password") String password);
 
     /**
      * 注册
@@ -27,13 +27,13 @@ public interface UserDao {
      * @param major 专业
      * @return
      */
-    Boolean addUser(@Param("userName") String userName, @Param("password") String password ,@Param("studentId") String studentId, @Param("mail") String mail, @Param("major") String major);
+    Boolean addUser(@Param("userName") String userName, @Param("password") String password ,@Param("studentId") Integer studentId, @Param("mail") String mail, @Param("major") String major);
 
     /**
      * 根据用户名查询用户
-     * @param userName 用户名
+     * @param studentId 学号
      * @return
      */
-    User selectUserByUserName(@Param("userName") String userName);
+    User selectUserByStudentId(@Param("studentId") Integer studentId);
 
 }

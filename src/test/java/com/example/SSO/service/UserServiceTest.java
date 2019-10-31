@@ -26,7 +26,7 @@ public class UserServiceTest {
     @Test
     public void login() {
         UserDto userDto = new UserDto();
-        userDto.setUserName("hsy");
+        userDto.setStudentId(2018210868);
         userDto.setPassword("123456");
         userDto.setVerifyCode("fghj");
         User user = userService.login(userDto);
@@ -37,13 +37,19 @@ public class UserServiceTest {
     @Transactional
     @Test
     public void addUser() {
-        Boolean result = userService.addUser("sl","234567","4567890","67890","hieuhd");
+        Boolean result = userService.addUser("sl","234567",4567890,"67890","hieuhd");
         Assert.assertTrue(result);
     }
 
     @Test
-    public void selectUserByUserName() {
-        User user = userService.selectUserByUserName("hsy");
+    public void selectUserByStudentId() {
+        User user = userService.selectUserByStudentId(2018210868);
         Assert.assertNotNull(user);
+    }
+
+    @Test
+    public void sendMail(){
+        Boolean result = userService.sendMail("975444913@qq.com","hahahahah","韩思玥发个你的邮件");
+        Assert.assertTrue(result);
     }
 }
