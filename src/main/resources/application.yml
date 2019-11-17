@@ -22,7 +22,7 @@ spring:
   mail:
     host: smtp.qq.com
     username: 975444913@qq.com
-    password: jgvyryxgryysbegf
+    password: aeyzvqsrqrysbajg
     default-encoding: UTF-8
     port: 587
     properties:
@@ -30,10 +30,13 @@ spring:
         smtp:
           socketFactory.class: javax.net.ssl.SSLSocketFactory
         debug: true
+  freemarker:
+    template-loader-path: /Users/mac/Documents/demo/src/main/resources/templates/mail
 
 mybatis:
   mapper-locations: classpath*:mappers/*.xml
   configuration:
     cache-enabled: true
     call-setters-on-nulls: true
+
 

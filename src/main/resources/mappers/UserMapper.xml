@@ -8,7 +8,7 @@
         <result property="password" column="password" jdbcType="VARCHAR"/>
         <result property="mail" column="mail" jdbcType="VARCHAR"/>
         <result property="major" column="major" jdbcType="VARCHAR"/>
-        <result property="head" column="head" jdbcType="VARCHAR"/>
+        <result property="headUrl" column="headUrl" jdbcType="VARCHAR"/>
         <result property="studentId" column="studentId" jdbcType="INTEGER"/>
     </resultMap>
 
@@ -28,6 +28,34 @@
         select *
         from user
         where studentId = #{studentId}
+    </select>
+
+    <update id="updatePassword">
+        update user set password=#{password}
+        where studentId=#{studentId}
+    </update>
+
+    <update id="updateInfo">
+        update user set userName=#{userName},major=#{major},headUrl=#{headUrl}
+        where studentId=#{studentId}
+    </update>
+
+    <delete id="deleteDirection" parameterType="java.util.List">
+        delete from user_direction
+        where studentId=#{studentId}
+    </delete>
+
+    <insert id="insertDirection" parameterType="com.example.SSO.domain.entity.userDirection">
+        insert into user_direction(studentId, direction)
+        values
+        <foreach collection="userDirection" item="item" separator=",">
+            (#{item.studentId},#{item.direction})
+        </foreach>
+    </insert>
+
+    <select id="displayDirection" parameterType="com.example.SSO.domain.entity.User" resultType="java.lang.Integer">
+        select direction from user_direction
+        where studentId=#{studentId}
     </select>
 
 </mapper>

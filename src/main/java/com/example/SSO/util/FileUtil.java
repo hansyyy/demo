@@ -1,9 +1,8 @@
-package cn.edu.cqupt.mislab.excellentroom.util;
+package com.example.SSO.util;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

@@ -1,4 +1,4 @@
-package cn.edu.cqupt.mislab.excellentroom.util;
+package com.example.SSO.util;
 
 import java.util.UUID;
 

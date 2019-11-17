@@ -39,16 +39,17 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
             String token = (String) request.getSession().getAttribute("token");
             System.out.println(token);
-            String studentId = "";
+            Integer sId = (Integer) request.getSession().getAttribute("studentId");
+            String studentId;
             Jedis jedis = new Jedis("127.0.0.1", 6379);
             if (token != null && token.length() != 0) {
                 //通过token查询用户名
-                studentId = jedis.get(token);
+                studentId=jedis.get(token);
             }else {
                 System.out.println("token为空！");
                 return false;
             }
-            if (studentId != null && !("").equals(studentId.trim())) {
+            if (sId.toString().equals(studentId) && !("").equals(studentId.trim())) {
                 Long tokeBirthTime = Long.valueOf(jedis.get(token + studentId));
                 Long diff = System.currentTimeMillis() - tokeBirthTime;
                 //重新设置Redis中的token过期时间
@@ -65,7 +66,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
                 return true;
             } else {
                 try {
-                    System.out.println(ResultUtil.error("拦截失败"));
+                    System.out.println(ResultUtil.error());
                     return false;
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -1,30 +1,25 @@
 package com.example.SSO.controller;
 
 import com.example.SSO.annotation.AuthToken;
-import com.example.SSO.constant.ConstantKit;
 import com.example.SSO.domain.dto.UserDto;
 import com.example.SSO.domain.entity.Result;
 import com.example.SSO.domain.entity.User;
 import com.example.SSO.service.UserService;
+import com.example.SSO.util.FileUtil;
 import com.example.SSO.util.ResultUtil;
-import com.example.SSO.util.TokenUtil;
-import com.example.SSO.util.VerifyUtil;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 import org.springframework.web.bind.annotation.*;
-import redis.clients.jedis.Jedis;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+
 
 /**
  * @Author HanSiyue
@@ -33,8 +28,11 @@ import java.util.Map;
 @EnableRedisHttpSession
 @RestController
 @RequestMapping("userSystem")
-@Api("登陆文档接口")
+@Api("工作室主页文档接口")
 public class UserController {
+
+    //@Value("${path}")
+    private static final String path="/Users/mac/Desktop/pic";
 
     @Autowired
     private UserService userService;
@@ -43,56 +41,36 @@ public class UserController {
     @ApiOperation("用户登陆")
     public Result login(HttpServletRequest request, @RequestBody UserDto userDto) {
         try {
-            String verifyCode = (String)request.getSession().getAttribute("verifyCode");
-            if (verifyCode.equals(userDto.getVerifyCode())){
-                User user = userService.login(userDto);
-                if (user!=null){
-                    Jedis jedis = new Jedis("127.0.0.1", 6379);
-                    //生成token
-                    String token = TokenUtil.generateToken(userDto.getStudentId().toString(), userDto.getPassword());
-                    request.getSession().setAttribute("token",token);
-                    request.getSession().setAttribute("studentId",user.getStudentId());
-                    jedis.set(userDto.getStudentId().toString(), token);
-                    //设置key生存时间，当key过期时，它会被自动删除，时间是秒
-                    jedis.expire(userDto.getStudentId().toString(), ConstantKit.TOKEN_EXPIRE_TIME);
-                    jedis.set(token, userDto.getStudentId().toString());
-                    jedis.expire(token, ConstantKit.TOKEN_EXPIRE_TIME);
-                    Long currentTime = System.currentTimeMillis();
-                    jedis.set(token + userDto.getStudentId(), currentTime.toString());
-                    //用完关闭
-                    jedis.close();
-                    return ResultUtil.success(user.getUserName());
-                }else {
-                    return ResultUtil.notExist("用户不存在");
-                }
+            String verifyCode = (String) request.getSession().getAttribute("verifyCode");
+            if (verifyCode.equals(userDto.getVerifyCode())) {
+                User user = userService.login(request,userDto);
+                return ResultUtil.success(user.getUserName());
             }else {
-                return ResultUtil.error("验证码错误");
+                return ResultUtil.error();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResultUtil.error("登陆失败");
+            return ResultUtil.error();
         }
     }
 
     @PostMapping("addUser")
     @ApiOperation("注册")
-    public Result addUser(String userName, String password, Integer studentId, String mail, String major){
+    public Result addUser(String userName, String password, Integer studentId, String mail, String major, @RequestParam(value = "directions")List<Integer> directions){
         try {
             if (userName==null||password==null){
-                return ResultUtil.isNull("用户名或密码为空");
+                return ResultUtil.isNull();
             }else {
-                Boolean result = userService.addUser(userName, password,studentId,mail,major);
-                User user = userService.selectUserByStudentId(studentId);
-                user.setIdentifier(3);
+                Boolean result = userService.addUser(userName, password,studentId,mail,major,directions);
                 if (result){
-                    return ResultUtil.success("用户"+userName+"已注册");
+                    return ResultUtil.success();
                     }else {
-                    return ResultUtil.error("注册失败");
+                    return ResultUtil.error();
                     }
                 }
         }catch (Exception e){
             e.printStackTrace();
-            return ResultUtil.error("注册失败");
+            return ResultUtil.error();
         }
     }
 
@@ -100,14 +78,7 @@ public class UserController {
     @ApiOperation("生成验证码")
     public void verifycode(HttpServletRequest request, HttpServletResponse response){
         try {
-            Object[] objects = VerifyUtil.createImage();
-            request.getSession().setAttribute("verifyCode",objects[0]);
-            BufferedImage image = (BufferedImage) objects[1];
-            response.setContentType("image/png");
-            OutputStream os = response.getOutputStream();
-            ImageIO.write(image, "png", os);
-            System.out.println(objects[0]);
-            os.close();
+            System.out.println(userService.verifycode(request,response));
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -126,26 +97,80 @@ public class UserController {
     public Result loginout(HttpServletResponse response,HttpServletRequest request) throws IOException {
         request.getSession().setAttribute("token",null);
         //response.sendRedirect("");
-        return ResultUtil.success("用户已登出");
+        return ResultUtil.success();
     }
 
     @PostMapping("sendMail")
     @ApiOperation("发送邮件")
     @AuthToken
-    public Result sendMail(HttpServletRequest request, String subject){
+    public Result sendMail(HttpServletRequest request){
         try {
-            Integer studentId = (Integer)request.getSession().getAttribute("studentId");
-            User user = userService.selectUserByStudentId(studentId);
-            Object[] objects = VerifyUtil.createImage();
-            request.getSession().setAttribute("mailVerifyCode",objects[0]);
-            if (userService.sendMail(user.getMail(), subject, "验证码为"+objects[0])){
-                return ResultUtil.success(objects[0].toString());//返回邮箱验证码
+            if (userService.sendMail(request)){
+                return ResultUtil.success(request.getSession().getAttribute("mailVerifyCode"));
             }else{
-                return ResultUtil.error("邮件发送失败");
+                return ResultUtil.error();
             }
         }catch (Exception e){
             e.printStackTrace();
-            return ResultUtil.error("错误！");
+            return ResultUtil.error();
+        }
+    }
+
+    @PostMapping("updatePassword")
+    @ApiOperation("修改密码")
+    @AuthToken
+    public Result updatePassword(HttpServletRequest request,String password,String mailVerifyCode){
+        try {
+            if (mailVerifyCode == null || password == null) {
+                return ResultUtil.isNull();
+            } else {
+                if (userService.updatePassword(request, password,mailVerifyCode)) {
+                    return ResultUtil.success();
+                } else {
+                    return ResultUtil.error();
+                }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+            return ResultUtil.error();
+        }
+    }
+
+    @PostMapping("updateInfo")
+    @ApiOperation("修改个人资料")
+    @AuthToken
+    public  Result updateInfo(HttpServletRequest request, String major, String userName, @RequestParam(value = "file") MultipartFile imageFile, @RequestParam(value = "directions")List<Integer> directions){
+        try {
+            if (request.getSession().getAttribute("studentId")==null&&imageFile.isEmpty()){
+                return ResultUtil.isNull();
+            }else {
+                FileUtil.upload(imageFile,path);
+                Boolean result = userService.updateInfo(request,major,userName,FileUtil.fileUrl(imageFile,path),directions);
+                if (result){
+                    return ResultUtil.success(FileUtil.fileUrl(imageFile,path));
+                }else {
+                    return ResultUtil.error();
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResultUtil.error();
+        }
+    }
+
+    @GetMapping("displayInfo")
+    @ApiOperation("展示个人资料")
+    @AuthToken
+    public Result displayInfo(HttpServletRequest request){
+        try{
+            if (request.getSession().getAttribute("studentId")==null){
+                return ResultUtil.isNull();
+            }else {
+                return ResultUtil.success(userService.displayInfo(request));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResultUtil.error();
         }
     }
 

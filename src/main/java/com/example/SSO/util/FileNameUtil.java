@@ -1,8 +1,8 @@
-package cn.edu.cqupt.mislab.excellentroom.util;
+package com.example.SSO.util;
 
 import org.apache.ibatis.annotations.Param;
 
-import cn.edu.cqupt.mislab.excellentroom.util.UUIDUtil;
+import com.example.SSO.util.UUIDUtil;
 
 /**
  * @Author HanSiyue

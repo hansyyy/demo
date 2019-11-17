@@ -17,22 +17,23 @@ public class ResultUtil {
     }
 
     public static Result success() {
-        return success(null);
-    }
+        Result result = new Result();
+        result.setStatus(ResultEnum.SUCCESS.getStatus());
+        result.setMsg(ResultEnum.SUCCESS.getMsg());
+        return result;
+}
 
-    public static Result error(Object object) {
+    public static Result error() {
         Result result = new Result();
         result.setStatus(ResultEnum.ERROR.getStatus());
         result.setMsg(ResultEnum.ERROR.getMsg());
-        result.setData(object);
         return result;
     }
 
-    public static Result isNull(Object object) {
+    public static Result isNull() {
         Result result = new Result();
         result.setStatus(ResultEnum.ISNULL.getStatus());
         result.setMsg(ResultEnum.ISNULL.getMsg());
-        result.setData(object);
         return result;
     }
 
@@ -43,11 +44,10 @@ public class ResultUtil {
         return result;
     }
 
-    public static Result notExist(Object object) {
+    public static Result notExist() {
         Result result = new Result();
         result.setStatus(ResultEnum.NOTEXIST.getStatus());
         result.setMsg(ResultEnum.NOTEXIST.getMsg());
-        result.setData(object);
         return result;
     }
 }
