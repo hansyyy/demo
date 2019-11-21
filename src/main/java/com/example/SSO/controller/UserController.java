@@ -5,6 +5,7 @@ import com.example.SSO.domain.dto.UserDto;
 import com.example.SSO.domain.entity.Result;
 import com.example.SSO.domain.entity.User;
 import com.example.SSO.service.UserService;
+import com.example.SSO.util.FileNameUtil;
 import com.example.SSO.util.FileUtil;
 import com.example.SSO.util.ResultUtil;
 import io.swagger.annotations.Api;
@@ -31,8 +32,8 @@ import java.util.List;
 @Api("工作室主页文档接口")
 public class UserController {
 
-    //@Value("${path}")
-    private static final String path="/Users/mac/Desktop/pic";
+    //相对地址
+    public final static String RELATIVE_PATH="/Users/mac/Documents/demo/src/main/resources/static/img/";
 
     @Autowired
     private UserService userService;
@@ -56,7 +57,7 @@ public class UserController {
 
     @PostMapping("addUser")
     @ApiOperation("注册")
-    public Result addUser(String userName, String password, Integer studentId, String mail, String major, @RequestParam(value = "directions")List<Integer> directions){
+    public Result addUser(@RequestParam(value = "userName") String userName, @RequestParam(value = "password")String password, @RequestParam(value = "studentId")Integer studentId, @RequestParam(value = "mail")String mail, @RequestParam(value = "major")String major, @RequestParam(value = "directions")List<Integer> directions){
         try {
             if (userName==null||password==null){
                 return ResultUtil.isNull();
@@ -74,7 +75,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("createVerifyCode")
+    @GetMapping("createVerifyCode")
     @ApiOperation("生成验证码")
     public void verifycode(HttpServletRequest request, HttpServletResponse response){
         try {
@@ -86,9 +87,12 @@ public class UserController {
 
     @RequestMapping(value = "test", method = RequestMethod.GET)
     @ApiOperation("test")
-    @AuthToken
-    public Result test(){
-        return ResultUtil.success();
+    public Result test(HttpServletRequest request){
+        if (request.getSession().getAttribute("token")==null){
+            return ResultUtil.isNull();
+        }else {
+            return ResultUtil.success();
+        }
     }
 
     @GetMapping("loginout")
@@ -100,7 +104,7 @@ public class UserController {
         return ResultUtil.success();
     }
 
-    @PostMapping("sendMail")
+    @GetMapping("sendMail")
     @ApiOperation("发送邮件")
     @AuthToken
     public Result sendMail(HttpServletRequest request){
@@ -119,7 +123,7 @@ public class UserController {
     @PostMapping("updatePassword")
     @ApiOperation("修改密码")
     @AuthToken
-    public Result updatePassword(HttpServletRequest request,String password,String mailVerifyCode){
+    public Result updatePassword(HttpServletRequest request,@RequestParam(value = "password")String password,@RequestParam(value = "mailVerifyCode")String mailVerifyCode){
         try {
             if (mailVerifyCode == null || password == null) {
                 return ResultUtil.isNull();
@@ -139,15 +143,16 @@ public class UserController {
     @PostMapping("updateInfo")
     @ApiOperation("修改个人资料")
     @AuthToken
-    public  Result updateInfo(HttpServletRequest request, String major, String userName, @RequestParam(value = "file") MultipartFile imageFile, @RequestParam(value = "directions")List<Integer> directions){
+    public  Result updateInfo(HttpServletRequest request, @RequestParam(value = "major")String major, @RequestParam(value = "userName")String userName, @RequestParam(value = "file") MultipartFile imageFile, @RequestParam(value = "directions")List<Integer> directions){
         try {
             if (request.getSession().getAttribute("studentId")==null&&imageFile.isEmpty()){
                 return ResultUtil.isNull();
             }else {
-                FileUtil.upload(imageFile,path);
-                Boolean result = userService.updateInfo(request,major,userName,FileUtil.fileUrl(imageFile,path),directions);
+                FileUtil.upload(imageFile,RELATIVE_PATH);
+                String headUrl=FileNameUtil.getFileName(imageFile.getOriginalFilename());
+                Boolean result = userService.updateInfo(request, major, userName, headUrl, directions);
                 if (result){
-                    return ResultUtil.success(FileUtil.fileUrl(imageFile,path));
+                    return ResultUtil.success(FileUtil.fileUrl(imageFile,RELATIVE_PATH));
                 }else {
                     return ResultUtil.error();
                 }

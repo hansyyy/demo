@@ -20,8 +20,8 @@
     </select>
 
     <insert id="addUser" >
-        INSERT INTO user(userName, password, studentId, major, mail)
-        VALUES (#{userName},#{password},#{studentId},#{major},#{mail})
+        INSERT INTO user(userName, password, studentId, major, mail, identifier,headUrl)
+        VALUES (#{userName},#{password},#{studentId},#{major},#{mail},#{identifier},#{headUrl})
     </insert>
 
     <select id="selectUserByStudentId" resultMap="User" resultType="com.example.SSO.domain.entity.User">

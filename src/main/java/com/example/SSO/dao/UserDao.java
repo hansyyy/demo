@@ -28,9 +28,11 @@ public interface UserDao {
      * @param studentId
      * @param mail
      * @param major
+     * @param identifier
+     * @param headUrl
      * @return
      */
-    Boolean addUser(@Param("userName") String userName, @Param("password") String password ,@Param("studentId") Integer studentId, @Param("mail") String mail, @Param("major") String major);
+    Boolean addUser(@Param("userName") String userName, @Param("password") String password , @Param("studentId") Integer studentId, @Param("mail") String mail, @Param("major") String major, @Param("identifier") Integer identifier, @Param("headUrl")String headUrl);
 
     /**
      * 添加方向

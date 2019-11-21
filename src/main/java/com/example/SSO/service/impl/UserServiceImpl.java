@@ -27,9 +27,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 
 
 /**
@@ -45,6 +44,10 @@ public class UserServiceImpl implements UserService {
     private UserDao userDao;
     @Autowired
     private JavaMailSender javaMailSender;
+
+    //绝对地址
+    public static final String ABSOLUTE_PATH="http://localhost:8081/Project/img/";
+
     /*
     @Autowired
     Configuration configuration;
@@ -84,19 +87,15 @@ public class UserServiceImpl implements UserService {
         if (userDao.selectUserByStudentId(studentId)!=null){
             return false;
         }else {
-            Boolean result1 = userDao.addUser(userName, password, studentId,mail,major);
+            Integer identifier = 3;
+            String headUrl = "public.png";
+            Boolean result1 = userDao.addUser(userName, password, studentId,mail,major,identifier,headUrl);
             List<userDirection> list = new ArrayList<>();
             for(Integer i:directions){
                 list.add(new userDirection(studentId,i));
             }
             Boolean result2 = userDao.insertDirection(list);
-            if (result1&&result2){
-                User user = userDao.selectUserByStudentId(studentId);
-                user.setIdentifier(3);
-                return true;
-            }else {
-                return false;
-            }
+            return result1&&result2;
         }
     }
 
@@ -197,7 +196,7 @@ public class UserServiceImpl implements UserService {
         if (user!=null){
             user.setDirections(userDao.displayDirection(studentId));
             UserPo userPo = new UserPo();
-            userPo.setHeadUrl(user.getHeadUrl());
+            userPo.setHeadUrl(ABSOLUTE_PATH+user.getHeadUrl());
             userPo.setStudentId(user.getStudentId());
             userPo.setDirections(user.getDirections());
             userPo.setUserName(user.getUserName());

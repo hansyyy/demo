@@ -18,9 +18,6 @@ import java.lang.reflect.Method;
  */
 public class AuthorizationInterceptor implements HandlerInterceptor {
 
-    //存放鉴权信息的Header名称，默认是Authorization
-    private String httpHeaderName = "Authorization";
-
     /**
      * 存放登录用户模型Key的Request Key
      */
@@ -43,12 +40,13 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
             String studentId;
             Jedis jedis = new Jedis("127.0.0.1", 6379);
             if (token != null && token.length() != 0) {
-                //通过token查询用户名
+                //通过token查询学号
                 studentId=jedis.get(token);
             }else {
                 System.out.println("token为空！");
                 return false;
             }
+            //验证
             if (sId.toString().equals(studentId) && !("").equals(studentId.trim())) {
                 Long tokeBirthTime = Long.valueOf(jedis.get(token + studentId));
                 Long diff = System.currentTimeMillis() - tokeBirthTime;

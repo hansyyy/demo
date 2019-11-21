@@ -15,7 +15,7 @@ public class FileUtil {
         try {
             String fileName = file.getOriginalFilename();
             // 生成新的文件名
-            String realPath = path + "/" + FileNameUtil.getFileName(fileName);
+            String realPath =fileUrl(file,path);
 
             //使用原文件名
             // String realPath = path + "/" + fileName;
@@ -39,10 +39,9 @@ public class FileUtil {
 
     }
 
-    public static String fileUrl(MultipartFile file, String path) {
-        String fileName = file.getOriginalFilename();
+    public static String fileUrl(MultipartFile file,String path) {
         // 生成新的文件名
-        String realPath = path + "/" + FileNameUtil.getFileName(fileName);
+        String realPath = path + FileNameUtil.getFileName(file.getOriginalFilename());
 
         return realPath;
     }
