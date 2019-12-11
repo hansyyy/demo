@@ -11,14 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public class FileUtil {
 
-    public static boolean upload(MultipartFile file, String path) {
+    public static String upload(MultipartFile file, String path) {
         try {
-            String fileName = file.getOriginalFilename();
-            // 生成新的文件名
-            String realPath =fileUrl(file,path);
+            String fileName = FileNameUtil.getFileName(file.getOriginalFilename());
 
-            //使用原文件名
-            // String realPath = path + "/" + fileName;
+            String realPath = path + "/" + fileName;
 
             File dest = new File(realPath);
 
@@ -28,22 +25,17 @@ public class FileUtil {
             }
             //保存文件
             file.transferTo(dest);
-            return true;
+            return fileName;
         } catch (IllegalStateException e) {
             e.printStackTrace();
-            return false;
+            return null;
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
+            return null;
         }
 
     }
 
-    public static String fileUrl(MultipartFile file,String path) {
-        // 生成新的文件名
-        String realPath = path + FileNameUtil.getFileName(file.getOriginalFilename());
 
-        return realPath;
-    }
 
 }

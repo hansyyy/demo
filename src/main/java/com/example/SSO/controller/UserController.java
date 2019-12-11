@@ -5,10 +5,11 @@ import com.example.SSO.domain.dto.UserDto;
 import com.example.SSO.domain.entity.Result;
 import com.example.SSO.domain.entity.User;
 import com.example.SSO.service.UserService;
-import com.example.SSO.util.FileNameUtil;
 import com.example.SSO.util.FileUtil;
 import com.example.SSO.util.ResultUtil;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,7 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -26,7 +28,6 @@ import java.util.List;
  * @Author HanSiyue
  * @Date 2019/9/18 下午3:32
  */
-@EnableRedisHttpSession
 @RestController
 @RequestMapping("userSystem")
 @Api("工作室主页文档接口")
@@ -42,6 +43,8 @@ public class UserController {
     @ApiOperation("用户登陆")
     public Result login(HttpServletRequest request, @RequestBody UserDto userDto) {
         try {
+            System.out.println("登陆"+request.getSession().getId());
+            System.out.println(userDto);
             String verifyCode = (String) request.getSession().getAttribute("verifyCode");
             if (verifyCode.equals(userDto.getVerifyCode())) {
                 User user = userService.login(request,userDto);
@@ -49,6 +52,18 @@ public class UserController {
             }else {
                 return ResultUtil.error();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResultUtil.error();
+        }
+    }
+
+    @PostMapping("login2")
+    @ApiOperation("用户登陆2")
+    public Result login2(HttpServletRequest request, @RequestParam(value = "password")String password, @RequestParam(value = "studentId")Integer studentId) {
+        try {
+            User user = userService.login2(request,password,studentId);
+            return ResultUtil.success(user.getUserName());
         } catch (Exception e) {
             e.printStackTrace();
             return ResultUtil.error();
@@ -79,7 +94,7 @@ public class UserController {
     @ApiOperation("生成验证码")
     public void verifycode(HttpServletRequest request, HttpServletResponse response){
         try {
-            System.out.println(userService.verifycode(request,response));
+            userService.verifycode(request,response);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -142,17 +157,19 @@ public class UserController {
 
     @PostMapping("updateInfo")
     @ApiOperation("修改个人资料")
+    @ApiImplicitParams({
+            @ApiImplicitParam(allowEmptyValue = true)
+    })
     @AuthToken
     public  Result updateInfo(HttpServletRequest request, @RequestParam(value = "major")String major, @RequestParam(value = "userName")String userName, @RequestParam(value = "file") MultipartFile imageFile, @RequestParam(value = "directions")List<Integer> directions){
         try {
             if (request.getSession().getAttribute("studentId")==null&&imageFile.isEmpty()){
                 return ResultUtil.isNull();
             }else {
-                FileUtil.upload(imageFile,RELATIVE_PATH);
-                String headUrl=FileNameUtil.getFileName(imageFile.getOriginalFilename());
+                String headUrl=FileUtil.upload(imageFile,RELATIVE_PATH);
                 Boolean result = userService.updateInfo(request, major, userName, headUrl, directions);
                 if (result){
-                    return ResultUtil.success(FileUtil.fileUrl(imageFile,RELATIVE_PATH));
+                    return ResultUtil.success();
                 }else {
                     return ResultUtil.error();
                 }

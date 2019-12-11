@@ -22,13 +22,15 @@ import redis.clients.jedis.Jedis;
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.mail.internet.MimeMessage;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.net.*;
 
 
 /**
@@ -46,15 +48,15 @@ public class UserServiceImpl implements UserService {
     private JavaMailSender javaMailSender;
 
     //绝对地址
-    public static final String ABSOLUTE_PATH="http://localhost:8081/Project/img/";
+    public static final String ABSOLUTE_PATH=":8081/Project/img/";
 
-    /*
+
     @Autowired
     Configuration configuration;
-     */
 
     @Override
     public User login(HttpServletRequest request, UserDto userDto) {
+        System.out.println(userDto);
         if (userDto.getStudentId() == null || userDto.getPassword() == null || userDto
                 .getVerifyCode() == null) {
             return null;
@@ -64,8 +66,8 @@ public class UserServiceImpl implements UserService {
                 Jedis jedis = new Jedis("127.0.0.1", 6379);
                 //生成token
                 String token = TokenUtil.generateToken(userDto.getStudentId().toString(), userDto.getPassword());
-                request.getSession().setAttribute("token", token);
-                request.getSession().setAttribute("studentId",user.getStudentId());
+                request.getSession(false).setAttribute("token", token);
+                request.getSession(false).setAttribute("studentId",user.getStudentId());
                 jedis.set(userDto.getStudentId().toString(), token);
                 //设置key生存时间，当key过期时，它会被自动删除，时间是秒
                 jedis.expire(userDto.getStudentId().toString(), ConstantKit.TOKEN_EXPIRE_TIME);
@@ -73,6 +75,35 @@ public class UserServiceImpl implements UserService {
                 jedis.expire(token, ConstantKit.TOKEN_EXPIRE_TIME);
                 Long currentTime = System.currentTimeMillis();
                 jedis.set(token + userDto.getStudentId(), currentTime.toString());
+                //用完关闭
+                jedis.close();
+                return user;
+            } else {
+                System.out.println("-----");
+                return null;
+            }
+        }
+    }
+
+    @Override
+    public User login2(HttpServletRequest request, String password, Integer studentId) {
+        if (password == null || studentId == null) {
+            return null;
+        } else {
+            User user = userDao.login(studentId,password);
+            if (user != null) {
+                Jedis jedis = new Jedis("127.0.0.1", 6379);
+                //生成token
+                String token = TokenUtil.generateToken(studentId.toString(), password);
+                request.getSession(false).setAttribute("token", token);
+                request.getSession(false).setAttribute("studentId",user.getStudentId());
+                jedis.set(studentId.toString(), token);
+                //设置key生存时间，当key过期时，它会被自动删除，时间是秒
+                jedis.expire(studentId.toString(), ConstantKit.TOKEN_EXPIRE_TIME);
+                jedis.set(token, studentId.toString());
+                jedis.expire(token, ConstantKit.TOKEN_EXPIRE_TIME);
+                Long currentTime = System.currentTimeMillis();
+                jedis.set(token + studentId, currentTime.toString());
                 //用完关闭
                 jedis.close();
                 return user;
@@ -122,10 +153,18 @@ public class UserServiceImpl implements UserService {
             helper.setTo(user.getMail());
             helper.setSubject("验证码");
             String content = "<html>\n"+
-                    "<body>\n" +
-                    "<h1 style=\"color: red\">这是你的验证码：</h1>"+objects[0]+
+                    "<body>" +
+                    "<h1 style=\"color: black\">亲爱的"+user.getUserName()+"同学，你好!</h1><p style=\"color: black\">这是你用于修改密码的验证码：</p><br>"+"<h1 style=\"color: MediumPurple\" align=\"center\">"+objects[0]+"</h1>"+
                     "</body>\n"+
                     "</html>";
+            /*
+            Map<String, Object> map = new HashMap();
+            map.put("UserName", user.getUserName());
+            map.put("captcha",objects[0]);
+
+            Template template = configuration.getTemplate("mailTemplate.ftl");
+            String html = FreeMarkerTemplateUtils.processTemplateIntoString(template,map);
+             */
             helper.setText(content,true);
             javaMailSender.send(mimeMessage);
             return true;
@@ -141,11 +180,13 @@ public class UserServiceImpl implements UserService {
         try {
             Object[] objects = VerifyUtil.createImage();
             request.getSession().setAttribute("verifyCode", objects[0]);
+            System.out.println("验证码sessionid---"+request.getSession().getId());
             BufferedImage image = (BufferedImage) objects[1];
             response.setContentType("image/png");
             OutputStream os = response.getOutputStream();
             ImageIO.write(image, "png", os);
             os.close();
+            System.out.println(objects[0]);
             return objects[0];
         } catch (Exception e) {
             e.printStackTrace();
@@ -157,12 +198,7 @@ public class UserServiceImpl implements UserService {
     public Boolean updatePassword(HttpServletRequest request, String password,String mailVerifyCode) {
         Integer studentId = (Integer) request.getSession().getAttribute("studentId");
         if (mailVerifyCode.equals(request.getSession().getAttribute("mailVerifyCode")) && userDao.selectUserByStudentId(studentId)!=null){
-            Boolean result = userDao.updatePassword(studentId,password);
-            if (result){
-                return true;
-            }else {
-                return false;
-            }
+            return userDao.updatePassword(studentId,password);
         }else {
             return false;
         }
@@ -179,11 +215,7 @@ public class UserServiceImpl implements UserService {
                 list.add(new userDirection(studentId,i));
             }
             Boolean result3 = userDao.insertDirection(list);
-            if (result1&&result2&&result3){
-                return true;
-            }else {
-                return false;
-            }
+            return result1&&result2&&result3;
         }else {
             return false;
         }
@@ -193,19 +225,26 @@ public class UserServiceImpl implements UserService {
     public UserPo displayInfo(HttpServletRequest request) {
         Integer studentId = (Integer) request.getSession().getAttribute("studentId");
         User user = userDao.selectUserByStudentId(studentId);
-        if (user!=null){
-            user.setDirections(userDao.displayDirection(studentId));
-            UserPo userPo = new UserPo();
-            userPo.setHeadUrl(ABSOLUTE_PATH+user.getHeadUrl());
-            userPo.setStudentId(user.getStudentId());
-            userPo.setDirections(user.getDirections());
-            userPo.setUserName(user.getUserName());
-            userPo.setMajor(user.getMajor());
-            return userPo;
-        }else {
+        try {
+            //LocalHostIP Address
+            InetAddress ia= InetAddress.getLocalHost();
+            String ip = ia.getHostAddress();
+            String path = "http://"+ip+ABSOLUTE_PATH;
+            if (user!=null){
+                user.setDirections(userDao.displayDirection(studentId));
+                UserPo userPo = new UserPo();
+                userPo.setHeadUrl(path+user.getHeadUrl());
+                userPo.setStudentId(user.getStudentId());
+                userPo.setDirections(user.getDirections());
+                userPo.setUserName(user.getUserName());
+                userPo.setMajor(user.getMajor());
+                return userPo;
+            }else {
+                return null;
+            }
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
             return null;
         }
     }
-
-
 }

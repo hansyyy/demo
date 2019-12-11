@@ -23,6 +23,8 @@ public interface UserService {
      */
     User login(HttpServletRequest request, UserDto userDto);
 
+    User login2(HttpServletRequest request, @Param("password") String password ,@Param("studentId") Integer studentId);
+
     /**
      * 注册
      * @param userName

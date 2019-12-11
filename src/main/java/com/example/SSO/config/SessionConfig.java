@@ -5,7 +5,7 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 
 /**
  * @Author HanSiyue
- * @Date 2019/9/18 下午3:24
+ * @Date 2019/12/8 下午3:03
  */
 @EnableRedisHttpSession
 @Configuration

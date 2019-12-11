@@ -40,4 +40,3 @@ mybatis:
   configuration:
     cache-enabled: true
     call-setters-on-nulls: true
-
